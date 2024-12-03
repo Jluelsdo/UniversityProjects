@@ -1,0 +1,83 @@
+{% extends 'llm_webgate/base.html' %}
+{% block head %}
+<script>
+    function fetchData(){
+        var button = document.getElementById('fetch_button');
+        var textField = document.getElementById('new_question');
+        var questionsDiv = document.getElementById('questions');
+        var newAnswerDiv = document.getElementById('new_anwser');
+
+
+        button.addEventListener('click', function() {
+            var inputValue = textField.value;
+            var questionDate = new Date();
+
+            button.disabled=true;
+            // move question from input to streambox
+            textField.value = ""
+            var questionHTML = `
+            <div class="row col-sm-6 text-left">
+              ${inputValue}
+              ${questionDate.toLocaleString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' })}
+            </div>`;
+            questionsDiv.innerHTML += questionHTML;
+
+            var xhr = new XMLHttpRequest();
+            var url = 'ask/?question='+ encodeURIComponent(inputValue)
+            xhr.open('GET', url);
+            xhr.responseType = 'text'
+
+            xhr.onprogress = function() {
+                var responseText = xhr.responseText;
+                newAnswerDiv.innerHTML = responseText;
+            };
+
+            xhr.onload = function() {
+                var anwserDate = new Date();
+
+                var responseText = xhr.responseText;
+                var answerHTML = `
+                  <div class="row text-right justify-content-end">
+                    ${responseText}
+                    ${anwserDate.toLocaleString('en-GB', { day: 'numeric', month: 'numeric', year: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' })}
+                </div>`;
+                questionsDiv.innerHTML += answerHTML;
+                newAnswerDiv.innerHTML = '';
+                button.disabled=false;
+            };
+            xhr.send();
+        });
+    
+    }
+
+</script>
+{% endblock head %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <div id="questions">
+        {% for question in questions %}
+        <div class="row col-sm-6 text-left">
+            {{ question.content }}
+            {{ question.timestamp|date:"d/m/Y H:i:s" }}
+        </div>
+        <div class="row text-right justify-content-end">
+            {{ question.anwser.content }}
+            {{ question.anwser.timestamp|date:"d/m/Y H:i:s" }}
+        </div>
+        {% endfor %}
+        </div>
+        <div class="row text-right justify-content-end" id="new_anwser"></div>
+    </div>
+
+    {%csrf_token%}
+    <input type="text" id="new_question" name="new_question" class="form-control" placeholder="Type a question..." aria-label="Type a question...">
+    <button class="btn btn-primary" type="submit" id="fetch_button">Send</button>
+
+    <a class="btn btn-danger" type="submit" id="reset_chat" href="{% url 'reset_chat' %}">Delete Chat history</a>
+    <script>
+        fetchData();
+    </script>
+
+</div>
+{% endblock %}

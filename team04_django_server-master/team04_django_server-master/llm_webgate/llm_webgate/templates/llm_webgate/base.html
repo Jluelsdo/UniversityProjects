@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>{% block title %}{% endblock %}</title>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    {% block head%}
+    {% endblock%}
+    </head>
+
+    <body>
+        <div class="card-header">
+            {% if user.is_authenticated %}
+                <p>Welcome, {{ user.get_username }}. Thanks for logging in.</p>
+            {% else %}
+                <p>Welcome, new user. Please log in.</p>
+            {% endif %}
+        {% block content %}
+        {% endblock %}
+        </div>
+
+    </body>
+
+</html>
